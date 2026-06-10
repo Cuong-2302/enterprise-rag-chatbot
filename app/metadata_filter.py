@@ -1,11 +1,12 @@
-# app/metadata_filter.py
-
 def detect_section(text):
 
     text = text.lower()
 
     if "personal projects" in text:
-        return "project"
+        return "projects"
+
+    if "work experience" in text:
+        return "experience"
 
     if "technical skills" in text:
         return "skills"
@@ -13,4 +14,4 @@ def detect_section(text):
     if "education" in text:
         return "education"
 
-    return "general"
+    return "other"
