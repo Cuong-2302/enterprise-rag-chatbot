@@ -1,10 +1,10 @@
 from langchain_community.vectorstores import FAISS
 
-from app.config import VECTOR_DB_DIR
 from app.embeddings import get_embedding_model
+from app.config import VECTOR_DB_DIR
 
 
-def load_vector_store():
+def get_retriever():
 
     embedding_model = get_embedding_model()
 
@@ -14,18 +14,12 @@ def load_vector_store():
         allow_dangerous_deserialization=True
     )
 
-    return db
-
-
-def similarity_search(
-    query: str,
-    k: int = 3
-):
-    db = load_vector_store()
-
-    results = db.similarity_search(
-        query,
-        k=k
+    retriever = db.as_retriever(
+        search_type="mmr",
+        search_kwargs={
+            "k":3,
+            "fetch_k":10
+        }
     )
 
-    return results
+    return retriever

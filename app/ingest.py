@@ -6,6 +6,8 @@ from app.vector_store import (
     create_vector_store,
     save_vector_store
 )
+from app.metadata_filter import detect_section
+
 
 
 def load_pdf():
@@ -20,17 +22,22 @@ def load_pdf():
     return documents
 
 
+
 def split_documents(documents):
-    """
-    Split documents into chunks
-    """
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=150
+        chunk_size=500,
+        chunk_overlap=100
     )
 
     chunks = splitter.split_documents(documents)
+
+    # add metadata
+    for chunk in chunks:
+
+        chunk.metadata["section"] = detect_section(
+            chunk.page_content
+        )
 
     return chunks
 
@@ -56,12 +63,19 @@ if __name__ == "__main__":
 
     print(f"Total Chunks: {len(chunks)}")
 
-    print("\nChunk Preview:")
+    print("\nChunk Examples:")
     print("-" * 50)
 
-    print(chunks[0].page_content[:300])
+    for i, chunk in enumerate(chunks[:3]):
 
-    print("-" * 50)
+        print(f"\nChunk {i}")
+        print("Metadata:")
+        print(chunk.metadata)
+
+        print("\nContent:")
+        print(chunk.page_content[:300])
+
+        print("-" * 50)
 
     print("\n" + "=" * 50)
     print("STEP 3: Creating Vector Store")

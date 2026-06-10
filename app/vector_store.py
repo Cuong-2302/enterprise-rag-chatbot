@@ -6,11 +6,11 @@ from app.config import VECTOR_DB_DIR
 
 def create_vector_store(chunks):
 
-    embedding_model = get_embedding_model()
+    embeddings = get_embedding_model()
 
     vector_store = FAISS.from_documents(
         chunks,
-        embedding_model
+        embeddings
     )
 
     return vector_store
@@ -21,3 +21,16 @@ def save_vector_store(vector_store):
     vector_store.save_local(
         str(VECTOR_DB_DIR)
     )
+
+
+def load_vector_store():
+
+    embeddings = get_embedding_model()
+
+    vector_store = FAISS.load_local(
+        str(VECTOR_DB_DIR),
+        embeddings,
+        allow_dangerous_deserialization=True
+    )
+
+    return vector_store
