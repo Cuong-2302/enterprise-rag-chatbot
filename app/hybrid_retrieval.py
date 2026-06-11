@@ -8,24 +8,43 @@ from app.ingest import (
 from app.retriever import get_retriever
 
 
-docs = split_documents(
-    load_pdf()
-)
+docs = None
+bm25 = None
 
-tokenized_docs = [
-    doc.page_content.split()
-    for doc in docs
-]
 
-bm25 = BM25Okapi(
-    tokenized_docs
-)
+def initialize_bm25():
+
+    global docs
+    global bm25
+
+    if docs is None:
+
+        print("Loading PDF...")
+
+        docs = split_documents(
+            load_pdf()
+        )
+
+        print("Building BM25...")
+
+        tokenized_docs = [
+            doc.page_content.split()
+            for doc in docs
+        ]
+
+        bm25 = BM25Okapi(
+            tokenized_docs
+        )
+
+        print("BM25 Ready")
 
 
 def hybrid_search(
     query,
     top_k=10
 ):
+
+    initialize_bm25()
 
     retriever = get_retriever()
 
@@ -51,6 +70,7 @@ def hybrid_search(
     merged = {}
 
     for doc in dense_docs + sparse_docs:
+
         merged[
             doc.page_content
         ] = doc

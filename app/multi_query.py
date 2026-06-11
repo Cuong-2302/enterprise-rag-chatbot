@@ -1,27 +1,41 @@
-# app/multi_query.py
+from app.hybrid_retrieval import hybrid_search
 
-from app.llm import get_llm
+from app.query_generator import (
+    generate_search_queries
+)
 
-llm = get_llm()
 
+def multi_query_search(
+    question,
+    top_k=10
+):
 
-def generate_queries(query):
+    queries = generate_search_queries(
+        question
+    )
 
-    prompt = f"""
-Generate 4 different search queries.
+    print("\nGenerated Queries:")
+    print(queries)
 
-Question:
-{query}
+    all_docs = []
 
-Queries:
-"""
+    for query in queries:
 
-    response = llm.invoke(prompt)
+        docs = hybrid_search(
+            query,
+            top_k=top_k
+        )
 
-    queries = response.content.split("\n")
+        all_docs.extend(docs)
 
-    return [
-        q.strip("- ").strip()
-        for q in queries
-        if q.strip()
-    ]
+    unique_docs = {}
+
+    for doc in all_docs:
+
+        unique_docs[
+            doc.page_content
+        ] = doc
+
+    return list(
+        unique_docs.values()
+    )

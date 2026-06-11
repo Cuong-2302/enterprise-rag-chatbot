@@ -4,28 +4,40 @@ from app.memory import (
 )
 
 from app.query_rewriter import rewrite_query
-from app.hybrid_retrieval import hybrid_search
-from app.reranker import rerank_documents
 
-from app.prompts import RAG_PROMPT
+from app.multi_query import (
+    multi_query_search
+)
+
+from app.reranker import (
+    rerank_documents
+)
+
+from app.context_compressor import (
+    compress_context
+)
+
+from app.prompts import (
+    RAG_PROMPT
+)
 
 from app.llm import get_llm
-from app.context_compressor import compress_context
 
 
 llm = get_llm()
 
 
-def ask_rag(question):
-
-    history = history_to_text()
+def retrieve_documents(
+    question,
+    history
+):
 
     rewritten_question = rewrite_query(
         question,
         history
     )
 
-    docs = hybrid_search(
+    docs = multi_query_search(
         rewritten_question
     )
 
@@ -35,22 +47,86 @@ def ask_rag(question):
         top_k=5
     )
 
-    context = compress_context(
-    docs,
-    max_chars=3000
+    return (
+        rewritten_question,
+        docs
+    )
 
-)
+
+def build_context(
+    docs
+):
+
+    context = compress_context(
+        docs,
+        max_chars=3000
+    )
+
+    return context
+
+
+def generate_answer(
+    context,
+    question
+):
 
     prompt = RAG_PROMPT.format(
         context=context,
-        question=rewritten_question
+        question=question
     )
 
     response = llm.invoke(
         prompt
     )
 
-    answer = response.content
+    return response.content
+
+
+def ask_rag(question):
+
+    print("\n" + "=" * 50)
+    print("RAG PIPELINE")
+    print("=" * 50)
+
+    history = history_to_text()
+
+    try:
+
+        rewritten_question, docs = (
+            retrieve_documents(
+                question,
+                history
+            )
+        )
+
+        print(
+            f"\nRewritten Query:\n{rewritten_question}"
+        )
+
+        print(
+            f"\nRetrieved Docs: {len(docs)}"
+        )
+
+        context = build_context(
+            docs
+        )
+
+        print(
+            f"\nContext Length: {len(context)}"
+        )
+
+        answer = generate_answer(
+            context,
+            rewritten_question
+        )
+
+    except Exception as e:
+
+        answer = (
+            f"RAG Error: {str(e)}"
+        )
+
+        docs = []
 
     add_message(
         "user",
@@ -64,5 +140,10 @@ def ask_rag(question):
 
     return {
         "answer": answer,
-        "sources": docs
+        "sources": docs,
+        "rewritten_query":
+            rewritten_question
+            if "rewritten_question"
+            in locals()
+            else question
     }

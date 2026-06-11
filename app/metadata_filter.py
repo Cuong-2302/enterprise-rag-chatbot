@@ -1,17 +1,17 @@
 def detect_section(text):
 
-    text = text.lower()
+    text = text.upper()
 
-    if "personal projects" in text:
-        return "projects"
+    if "EDUCATION" in text:
+        return "education"
 
-    if "work experience" in text:
+    if "WORK EXPERIENCE" in text:
         return "experience"
 
-    if "technical skills" in text:
-        return "skills"
+    if "PERSONAL PROJECTS" in text:
+        return "project"
 
-    if "education" in text:
-        return "education"
+    if "TECHNICAL SKILLS" in text:
+        return "skill"
 
     return "other"

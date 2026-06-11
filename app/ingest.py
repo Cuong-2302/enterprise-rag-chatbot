@@ -7,17 +7,21 @@ from app.vector_store import (
     save_vector_store
 )
 from app.metadata_filter import detect_section
+import uuid
 
 
 
 def load_pdf():
-    """
-    Load PDF into LangChain Documents
-    """
+
+    print("Loading PDF Loader...")
 
     loader = PyPDFLoader(str(PDF_FILE))
 
+    print("Reading PDF...")
+
     documents = loader.load()
+
+    print("PDF Loaded")
 
     return documents
 
@@ -30,17 +34,38 @@ def split_documents(documents):
         chunk_overlap=100
     )
 
-    chunks = splitter.split_documents(documents)
+    all_chunks = []
 
-    # add metadata
-    for chunk in chunks:
+    for page_doc in documents:
 
-        chunk.metadata["section"] = detect_section(
-            chunk.page_content
+        page_chunks = splitter.split_documents(
+            [page_doc]
         )
 
-    return chunks
+        parent_id = str(
+            page_doc.metadata.get(
+                "page",
+                0
+            )
+        )
 
+        for chunk in page_chunks:
+
+            chunk.metadata["section"] = (
+                detect_section(
+                    chunk.page_content
+                )
+            )
+
+            chunk.metadata["parent_id"] = (
+                parent_id
+            )
+
+        all_chunks.extend(
+            page_chunks
+        )
+
+    return all_chunks
 
 if __name__ == "__main__":
 
