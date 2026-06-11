@@ -1,18 +1,40 @@
-from collections import defaultdict
+from app.ingest import (
+    load_pdf,
+    split_documents
+)
+
+chunks = split_documents(
+    load_pdf()
+)
 
 
-def build_parent_map(chunks):
+def get_parent_chunks(
+    retrieved_docs
+):
 
-    parent_map = defaultdict(list)
+    parent_ids = set()
+
+    for doc in retrieved_docs:
+
+        parent_ids.add(
+            doc.metadata.get(
+                "parent_id"
+            )
+        )
+
+    parent_docs = []
 
     for chunk in chunks:
 
-        parent_id = chunk.metadata.get(
-            "parent_id"
-        )
+        if (
+            chunk.metadata.get(
+                "parent_id"
+            )
+            in parent_ids
+        ):
 
-        parent_map[parent_id].append(
-            chunk
-        )
+            parent_docs.append(
+                chunk
+            )
 
-    return parent_map
+    return parent_docs

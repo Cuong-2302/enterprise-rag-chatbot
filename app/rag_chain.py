@@ -1,4 +1,4 @@
-from app.memory import (
+from app.sqlite_memory import (
     add_message,
     history_to_text
 )
@@ -45,6 +45,14 @@ def retrieve_documents(
         rewritten_question,
         docs,
         top_k=5
+    )
+
+    from app.parent_retriever import (
+        get_parent_chunks
+    )
+
+    docs = get_parent_chunks(
+        docs
     )
 
     return (
